@@ -1,0 +1,133 @@
+CREATE or alter procedure bronze.load_bronze as
+
+BEGIN
+	DECLARE @START_TIME DATETIME, @ENDTIME DATETIME;
+    SET NOCOUNT ON; -- Add this line
+    SET @START_TIME= GETDATE();
+		BEGIN TRY
+
+
+			print '==============================';
+			print 'Loading bronze layer';
+			print '==============================';
+
+			print'------------------------------------------';
+			print 'Loading crm table';
+			print'------------------------------------------';
+	
+	
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table bronze.crm_prd_info;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT bronze.crm_prd_info
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_crm\prd_info.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading crm_prd_info: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table bronze.crm_cust_info;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT bronze.crm_cust_info
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_crm\cust_info.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading crm_cust_info: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table bronze.crm_sales_details;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT bronze.crm_sales_details
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading crm_sales_details: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+	
+			print'------------------------------------------';
+			print 'Loading ERP table';
+			print'------------------------------------------';
+	
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table bronze.erp_CUST_AZ12;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT bronze.erp_CUST_AZ12
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading erp_CUST_AZ12: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table bronze.erp_LOC_A101;
+     		print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT bronze.erp_LOC_A101
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading erp_LOC_A101: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table bronze.erp_PX_CAT_G1V2;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT bronze.erp_PX_CAT_G1V2
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading erp_PX_CAT_G1V2: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+		END TRY
+	BEGIN CATCH 
+		PRINT '=================================================';
+		PRINT ' error- CAUGHT DURING LOADING BRONZE LAYER';
+		PRINT ' ERROR MESSAGE ' + ERROR_MESSAGE();
+		PRINT ' ERROR NUMBER ' + CAST(ERROR_NUMBER() AS NVARCHAR(MAX));
+		PRINT '=================================================';
+	END CATCH
+    set @ENDTIME = GETDATE();
+	print'load duration '+cast(datediff(second,@START_TIME,@ENDTIME) as nvarchar)+' seconds'; -- Corrected line
+END
+
+
+
+--------check the issues with data as well
+----------------------------------------------------------Step 4---------------------------------------
+
+Exec bronze.load_bronze
+--------------------------------------------------------------------------
