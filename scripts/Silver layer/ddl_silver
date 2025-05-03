@@ -1,1 +1,490 @@
+if OBJECT_ID('silver.crm_cust_info','U') is not null
+	drop table silver.crm_cust_info;
+create table silver.crm_cust_info(
+ cst_id INT,
+ cst_key Nvarchar(50) ,
+ cst_firstname Nvarchar(50),
+ cst_lastname Nvarchar(50),
+ cst_marital_status Nvarchar(50),
+ cst_gndr Nvarchar(50),
+ cst_create_date date
+ ,dwh_create_date datetime2 default getdate()----_____ for internal use only----dwh-datawarehouse
+);
 
+
+IF OBJECT_ID('silver.crm_prd_info') IS NOT NULL
+DROP TABLE silver.crm_prd_info;
+create table silver.crm_prd_info(
+ prd_id Int,
+ cat_id  nvarchar(50),
+ prd_key nvarchar(50),
+ prd_nm nvarchar(50),
+ prd_cost int,
+ prd_line nvarchar(100),
+ prd_start_dt date,
+ prd_end_dt date
+ ,dwh_create_date datetime2 default getdate()----_____ for internal use only----dwh-datawarehouse
+);
+
+if OBJECT_ID('silver.crm_sales_details','U') is not null
+	drop table silver.crm_sales_details;
+
+create table silver.crm_sales_details(
+sls_ord_num nvarchar(60),
+sls_prd_key nvarchar(60),
+sls_cust_id Int,
+sls_order_dt date,
+sls_ship_dt date,
+sls_due_dt date,
+sls_sales int,
+sls_quantity int,
+sls_price int
+,dwh_create_date datetime2 default getdate()----_____ for internal use only----dwh-datawarehouse
+ );
+
+if OBJECT_ID('silver.erp_CUST_AZ12','U') is not null
+	drop table silver.erp_CUST_AZ12;
+
+create table silver.erp_CUST_AZ12(
+CID Nvarchar(50),
+BDATE Date,
+GEN Nvarchar(50)
+ ,dwh_create_date datetime2 default getdate()----_____ for internal use only----dwh-datawarehouse
+);
+
+if OBJECT_ID('silver.erp_LOC_A101','U') is not null
+	drop table silver.erp_LOC_A101;
+
+create table silver.erp_LOC_A101(
+CID Nvarchar(50),
+CNTRY nvarchar(50)
+ ,dwh_create_date datetime2 default getdate()----_____ for internal use only----dwh-datawarehouse
+);
+
+
+if OBJECT_ID('silver.erp_PX_CAT_G1V2','U') is not null
+    drop table silver.erp_PX_CAT_G1V2;
+
+create table silver.erp_PX_CAT_G1V2(
+    ID nvarchar(50),
+    CAT nvarchar(50),
+    SUBCAT nvarchar(50),
+    MAINTENANCE nvarchar(50)
+    ,dwh_create_date datetime2 default getdate()----_____ for internal use only----dwh-datawarehouse
+);
+
+
+---------------------step3------------------------------------DATA LODAD------------------------------------
+-------------------------------------------------------------------------------------------------------
+
+
+-------------will create a stroe procedure for daily updation of data by single query-------------------
+CREATE or alter procedure silver.load_silver as
+
+BEGIN
+	DECLARE @START_TIME DATETIME, @ENDTIME DATETIME;
+    SET NOCOUNT ON; -- Add this line
+    SET @START_TIME= GETDATE();
+		BEGIN TRY
+
+
+			print '==============================';
+			print 'Loading silver layer';
+			print '==============================';
+
+			print'------------------------------------------';
+			print 'Loading crm table';
+			print'------------------------------------------';
+	
+	
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table silver.crm_prd_info;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT silver.crm_prd_info
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_crm\prd_info.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading crm_prd_info: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table silver.crm_cust_info;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT silver.crm_cust_info
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_crm\cust_info.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading crm_cust_info: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table silver.crm_sales_details;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT silver.crm_sales_details
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading crm_sales_details: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+	
+			print'------------------------------------------';
+			print 'Loading ERP table';
+			print'------------------------------------------';
+	
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table silver.erp_CUST_AZ12;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT silver.erp_CUST_AZ12
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading erp_CUST_AZ12: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table silver.erp_LOC_A101;
+     		print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT silver.erp_LOC_A101
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading erp_LOC_A101: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+
+
+			print '>TRUNCATING TABLE FOR EACH TABLE ///';
+			Truncate table silver.erp_PX_CAT_G1V2;
+			print '>INSERTING DATA TABLE FOR EACH TABLE ///';
+			BEGIN TRY
+				BULK INSERT silver.erp_PX_CAT_G1V2
+				FROM 'D:\SQL\Project 1\sql-data-warehouse-project\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
+				With ( firstrow =2, fieldterminator = ',', tablock
+				);
+			END TRY
+			BEGIN CATCH
+				PRINT 'Error loading erp_PX_CAT_G1V2: ' + ERROR_MESSAGE();
+				PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS INT);
+			END CATCH;
+		END TRY
+	BEGIN CATCH 
+		PRINT '=================================================';
+		PRINT ' error- CAUGHT DURING LOADING silver LAYER';
+		PRINT ' ERROR MESSAGE ' + ERROR_MESSAGE();
+		PRINT ' ERROR NUMBER ' + CAST(ERROR_NUMBER() AS NVARCHAR(MAX));
+		PRINT '=================================================';
+	END CATCH
+    set @ENDTIME = GETDATE();
+	print'load duration '+cast(datediff(second,@START_TIME,@ENDTIME) as nvarchar)+' seconds'; -- Corrected line
+END
+
+----------------------------------------------------------------Insert and other stuff---------------------------------
+
+exec silver.load_silver
+----now we can add messages for each statge, time and error handling.
+
+Create or alter procedure silver.load_silver as
+Begin
+    ------------data cleanin-g---------------
+	truncate table Silver.CRM_CUST_INFO;
+	print('truncaste then added date');
+	INSERT INTO Silver.CRM_CUST_INFO
+	(cst_id,cst_key,
+	cst_firstname
+	,cst_lastname,
+	cst_marital_status,
+	cst_gndr,
+	cst_create_date)	
+	select cst_id,
+	cst_key,
+	trim(cst_firstname) as cst_firstname,
+	trim(cst_lastname) as cst_lastname,
+
+	case when Upper(TRIM(cst_marital_status)) = 'M' then 'Married' 
+		 when Upper(TRIM(cst_marital_status)) = 'S' then 'Single'
+		 else 'n/a'
+	End as cst_marital_status,
+	case when Upper(TRIM(cst_gndr)) = 'F' then 'Female' 
+		 when Upper(TRIM(cst_gndr)) = 'M' then 'Male'
+		 else 'n/a'
+	End as cst_gndr,
+
+	cst_create_date
+
+	from (
+	select *,
+	row_number() over (partition by cst_id order by cst_create_date asc) as rnk
+	from bronze.crm_cust_info) a where a.rnk = 1 
+
+
+	---------======================Updated data from bronze to silver==============================================---------
+	--select * from Silver.crm_cust_info
+
+
+
+
+	----1. check the primary key first ((find and check each column one by one)
+	--duplicacy and null
+
+	-----select c.cst_id,count(*) from bronze.crm_cust_info c group by c.cst_id having count(*) > 1 or c.cst_id is null
+
+
+	---2.---no duplicacy(where cst_id != 19446)
+	------select * from (
+	---select *,
+	---row_number() over (partition by cst_id order by cst_create_date asc) as rnk
+	---from bronze.crm_cust_info) a where a.rnk = 1 
+
+
+	--3.------check for unwanted spaces Where cst_firstname != TRIM(cst_firstname)
+
+	---select cst_firstname from bronze.crm_cust_info where cst_firstname != TRIM(cst_firstname);
+	---select cst_firstname from bronze.crm_cust_info where cst_lastname != TRIM(cst_lastname)
+
+	---4.-------- quality check==---   --check the consistency of value in low cardinality colulmns--
+	-------data standarisation and sconsistecy----------
+	---select distinct cst_gndr from bronze.crm_cust_info	---will not use abbrebatiuon for full name so,
+
+
+
+	-------After 1st one now other table will be analysed---
+	-----------------------------------------------------------------
+	----------------------------------------------------------
+	-----------------------------------------------------
+
+
+
+
+	--step 1. // 
+	---select count(*) from bronze.crm_prd_info group by prd_id having count(*) > 1 or prd_id is Null
+
+	--step 2. // check negative numbers and nullss
+
+
+
+
+	---select * from bronze.crm_prd_info
+
+	truncate table Silver.crm_prd_info;
+	print('truncaste then added date');
+
+	Insert into Silver.crm_prd_info(
+		prd_id,
+		prd_nm,
+		prd_cost,
+		prd_line,
+		prd_start_dt,
+		prd_end_dt,
+		cat_id,
+		Prd_key
+	)
+	select
+		prd_id,
+		prd_nm,
+		isnull(TRY_CAST(prd_cost AS INT), 0) as prd_cost, -- Use TRY_CAST to handle non-numeric values
+		case
+			when UPPER(trim(prd_line))= 'M' then 'Mountain'
+			when UPPER(trim(prd_line))= 'R' Then 'Road'
+			when UPPER(trim(prd_line))= 'T' Then 'Touring'
+			when UPPER(trim(prd_line))= 'S' Then 'Other sales'
+			Else 'n/a'
+		end as prd_line,
+		cast(prd_start_dt as date) as prd_start_dt,
+		cast(Lead(prd_start_dt) over (partition by prd_key order by prd_start_dt)-1 as date) as prd_end_dt,
+		replace(SUBSTRING(prd_key,1,5),'-','_') as cat_id,
+		SUBSTRING(prd_key,7,len(prd_key)) as Prd_key
+	from bronze.crm_prd_info;
+
+	--1.)Select * from Silver.crm_cust_info,Select * from Silver.crm_prd_info
+	---Select * from Silver.crm_cust_info
+	-------------------------------------------------------------------------------------------------------
+	-------------------------------------------------------------------------------------------------------
+	-------------------------------------------------------------------------------------------------------
+	--3rd).Transformation bronze.crm_sales_details
+
+	--count blank
+	---select COUNT(*) from bronze.crm_sales_details where sls_ord_num != trim(sls_ord_num)
+
+	----check key and error
+	---select * from bronze.crm_sales_details where sls_prd_key not in (select prd_key from Silver.crm_prd_info)
+	---select * from bronze.crm_sales_details where sls_prd_key not in (select cst_id from Silver.crm_cust_info)
+
+	----correct date pattern
+	---select nullif(sls_order_dt,0) as sls_order_dt from bronze.crm_sales_details where 
+	---sls_order_dt <= 0 or 
+	---LEN(sls_order_dt) !=8 or
+	---sls_order_dt >20500101 or
+	---sls_order_dt < 19000101
+
+
+	--------------------then check ordr of the date like order date> sls_shipdate> or order date > sls_due_dt
+	--------------------------------------
+
+	--then 
+	--check 
+	--sales =q * price
+
+	truncate table Silver.crm_sales_details;
+	print('truncaste then added date');
+
+	insert into Silver.crm_sales_details (
+	sls_ord_num,
+	sls_prd_key,
+	sls_cust_id,
+	sls_order_dt,
+	sls_ship_dt,
+	sls_due_dt,
+	sls_sales,
+	sls_quantity,
+	sls_price
+	)
+	select 
+	sls_ord_num,
+	sls_prd_key,
+	sls_cust_id,
+	case when sls_order_dt = 0 or LEN(sls_order_dt) != 8 then null 
+		else cast(cast(sls_order_dt as varchar) as date)
+	end as sls_order_dt,
+	case when sls_ship_dt = 0 or LEN(sls_ship_dt) != 8 then null 
+		else cast(cast(sls_ship_dt as varchar) as date)
+	end as sls_ship_dt,
+	case when sls_due_dt = 0 or LEN(sls_due_dt) != 8 then null 
+		else cast(cast(sls_due_dt as varchar) as date)
+	end as sls_due_dt,
+
+	case when sls_sales is null or sls_sales <=0 or sls_sales != sls_quantity *ABS(sls_price)
+		 then sls_quantity *ABS(sls_price)
+		 else sls_sales
+	end sls_sales,
+	sls_quantity,
+	case when sls_price is null or sls_price <=0
+	then sls_sales/ nullif(sls_quantity,0)
+	else sls_price
+
+	end as sls_price
+	---sls_sales as sls_sales_old,
+	----sls_quantity as sls_quantity_old,
+	---sls_price as sls_price_old
+	from bronze.crm_sales_details 
+
+
+
+
+	----------------------------------------------------erp table cleaning.-----------------
+	----------------------------------------------------------------------------------------
+
+	truncate table Silver.erp_CUST_AZ12;
+	print('truncaste then added date');
+
+	INSERT INTO Silver.erp_CUST_AZ12(CID,BDATE,GEN)
+
+	(select 
+	case when CID like 'NAS%' then SUBSTRING(cid,4,len(cid)) 
+	else CID
+	end 
+	CID,
+	case when BDATE> GETDATE() then null 
+	else BDATE
+	end as 
+	BDATE,
+	Case
+	WHEN upper(TRIM(GEN)) in ('F','FEMALE') THEN 'Female'
+	when upper(trim(Gen)) in ('M', 'MALE') Then 'Male'
+	else 'n/a'
+	end as Gen
+	from bronze.erp_CUST_AZ12
+	)
+
+
+	---select *
+	 ---from Silver.erp_CUST_AZ12
+
+
+	----------------------------------------------------------------------ERP 2ND TABLE------------------------
+	---SELECT * FROM bronze.erp_LOC_A101
+
+	----SELECT CID, COUNT(*) FROM bronze.erp_LOC_A101 GROUP BY CID HAVING CID IS NULL
+	truncate table Silver.erp_LOC_A101;
+	print('truncaste then added date');
+
+	insert into Silver.erp_LOC_A101 (
+	cid,CNTRY)(
+	SELECT TRIM(REPLACE(CID,'-','')) AS CID,
+	case when trim(CNTRY) = 'DE' then 'Germany'
+	when trim(CNTRY) in ('USA','US') then 'United States'
+	when trim(CNTRY) = ' ' or CNTRY is null then 'n/a'
+	else CNTRY
+	end as cntry FROM bronze.erp_LOC_A101
+	)
+--	'''select * from
+	--(select 
+	---case when trim(CNTRY) = 'DE' then 'Germany'
+	--when trim(CNTRY) in ('USA','US') then 'United States'
+	---when trim(CNTRY) = ' ' or CNTRY is null then 'n/a'
+	----else CNTRY
+	---end as cntry
+	---from bronze.erp_LOC_A101
+---	---) a group by cntry
+----	'''
+	---
+
+	--------------------erp last table ------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------
+	truncate table Silver.erp_PX_CAT_G1V2;
+	print('truncaste then added date');
+
+	insert into Silver.erp_PX_CAT_G1V2(
+	ID,
+	cat,
+	subcat,
+	MAINTENANCE )
+	(
+	select 
+	ID,
+	cat,
+	subcat,
+	MAINTENANCE 
+	from bronze.erp_PX_CAT_G1V2)
+
+	--Clean & Load
+
+	-----'select ID,COUNT(*) from bronze.erp_PX_CAT_G1V2 group by ID having COUNT(*) < 1 or id is null or cat 1= TRIM(Cat)'
+	----'select cat from bronze.erp_PX_CAT_G1V2 group by CAT'
+
+-----	'select SUBCAT from bronze.erp_PX_CAT_G1V2 group by subcat'
+
+	----'select MAINTENANCE from bronze.erp_PX_CAT_G1V2 group by MAINTENANCE'
+
+
+
+
+
+	------------------after adding truncate to each table then add or create sp--------------------
+end	
